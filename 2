@@ -1,0 +1,281 @@
+#exp 12-14 fuzzy set
+def union(set1, set2):
+    return {key:round(max(set1.get(key, 0), set2.get(key, 0)),1) 
+            for key in set(set1) | set(set2)}
+
+def intersection(set1, set2):
+    # Need to consider all elements from both sets for proper De Morgan's
+    all_keys = set(set1) | set(set2)
+    return {key: round(min(set1.get(key, 0), set2.get(key, 0)),1) 
+            for key in all_keys}
+
+def complement(set1, universal_set):
+    # Complement needs to be calculated with respect to the universal set
+    return {key: round(1.0 - set1.get(key, 0),1) for key in universal_set}
+
+# Experiment 12: Demonstrate with 3 sets
+set1 = {'a': 0.3, 'b': 0.7, 'c': 0.5}
+set2 = {'b': 0.4, 'c': 0.9, 'd': 0.2}
+set3 = {'a': 0.6, 'c': 0.3, 'd': 0.8}
+
+# Define universal set (all elements from all sets)
+universal_set = set(set1) | set(set2) | set(set3)
+
+print("Union(set1, set2):", union(set1, set2))
+print("Intersection(set1, set2):", intersection(set1, set2))
+print("Complement(set1):", complement(set1, universal_set))
+
+# Experiment 13-14: De Morgan's Laws
+# De Morgan's Law: Complement(Union) = Intersection(Complement)
+comp_union = complement(union(set1, set2), universal_set)
+int_comp = intersection(complement(set1, universal_set), complement(set2, universal_set))
+print("De Morgan's Law - Complement of Union:", comp_union == int_comp)
+
+# De Morgan's Law: Complement(Intersection) = Union(Complement)
+comp_int = complement(intersection(set1, set2), universal_set)
+union_comp = union(complement(set1, universal_set), complement(set2, universal_set))
+print("De Morgan's Law - Complement of Intersection:", comp_int == union_comp)
+
+#exp 15-16 minimax
+def evaluate(stones):
+    # If no stones left, the previous player took the last stone and loses
+    # So current player wins (return 1)
+    return 1 if stones == 0 else 0
+
+def minimax(stones, isMax, alpha=float('-inf'), beta=float('inf')):
+    if stones <= 0:
+        return evaluate(stones)
+    
+    if isMax:
+        best = float('-inf')
+        for i in range(1, min(4, stones+1)):  # Can take 1-3 stones
+            value = minimax(stones - i, False, alpha, beta)
+            best = max(best, value)
+            alpha = max(alpha, best)
+            if beta <= alpha:
+                break
+        return best
+    else:
+        best = float('inf')
+        for i in range(1, min(4, stones+1)):
+            value = minimax(stones - i, True, alpha, beta)
+            best = min(best, value)
+            beta = min(beta, best)
+            if beta <= alpha:
+                break
+        return best
+
+def nim_game(stones, computer_wins=True):
+    while stones > 0:
+        # Computer's turn
+        best_move = 0
+        best_value = float('-inf') if computer_wins else float('inf')
+        
+        for i in range(1, min(4, stones+1)):
+            value = minimax(stones - i, False if computer_wins else True)
+            if computer_wins and value > best_value:
+                best_value = value
+                best_move = i
+            elif not computer_wins and value < best_value:
+                best_value = value
+                best_move = i
+        
+        stones -= best_move
+        print(f"Computer takes {best_move}. Stones left: {stones}")
+        
+        if stones <= 0:
+            return "You win!" if computer_wins else "Computer wins!"
+        
+        # Player's turn
+        player_move = int(input("Your turn (1-3): "))
+        player_move = min(max(1, player_move), min(3, stones))
+        stones -= player_move
+        print(f"You take {player_move}. Stones left: {stones}")
+        
+        if stones <= 0:
+            return "Computer wins!" if computer_wins else "You win!"
+
+# Usage
+stones = int(input("Enter initial stones: "))
+print(nim_game(stones, computer_wins=True))  # For Exp 15
+# print(nim_game(stones, computer_wins=False))  # For Exp 16
+
+#exp 17 MLP with N inputs, 2 hidden layers, 1 output
+
+import numpy as np
+
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
+
+def mlp_forward(X, W1, b1, W2, b2, W3, b3):
+    # Layer 1
+    Z1 = np.dot(X, W1) + b1
+    A1 = sigmoid(Z1)
+    
+    # Layer 2
+    Z2 = np.dot(A1, W2) + b2
+    A2 = sigmoid(Z2)
+    
+    # Output layer
+    Z3 = np.dot(A2, W3) + b3
+    A3 = sigmoid(Z3)
+    
+    return A3
+
+# Usage
+N = int(input("Enter number of inputs: "))
+hidden1_size = 4
+hidden2_size = 3
+output_size = 1
+
+# Input
+X = np.random.randint(0, 2, N)
+print("Input:", X)
+
+# Number of steps
+num_steps = 5  # You can change this number
+
+for step in range(num_steps):
+    # Random initialization for each step
+    W1 = np.random.randn(N, hidden1_size)
+    b1 = np.random.randn(hidden1_size)
+    W2 = np.random.randn(hidden1_size, hidden2_size)
+    b2 = np.random.randn(hidden2_size)
+    W3 = np.random.randn(hidden2_size, output_size)
+    b3 = np.random.randn(output_size)
+    
+    # Forward pass
+    output = mlp_forward(X, W1, b1, W2, b2, W3, b3)
+    print(f"Step {step+1} - Output: {output[0]}")
+
+print(f"\nTotal number of steps: {num_steps}")
+print("\nFinal Weights and Biases (from last step):")
+print("W1 shape:", W1.shape)
+print("W2 shape:", W2.shape)
+print("W3 shape:", W3.shape)
+print("b1 shape:", b1.shape)
+print("b2 shape:", b2.shape)
+print("b3 shape:", b3.shape)
+
+#exp 18 Multi-Layer Perceptron with 4 binary inputs, one hidden layer and two binary outputs
+import numpy as np
+
+def sigmoid(X):
+    return X/(1+np.exp(-X))
+
+def mlp_forward(X,W1,b1):
+    #layer 1
+    Z1=np.dot(X,W1)+b1
+    A1=sigmoid(Z1)
+    return A1
+
+#usage
+X=np.random.randint(0,2,4)
+hidden1_size=4
+b1=4
+W1=np.random.randn(4,hidden1_size)
+output=mlp_forward(X,W1,b1)
+
+print(output[0])
+print(X)
+print(W1)
+print(b1)
+
+
+# exp 19-21 Use backpropagation
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
+
+def sigmoid_derivative(x):
+    return x * (1 - x)
+
+def relu(x):
+    return np.maximum(0, x)
+
+def relu_derivative(x):
+    return np.where(x > 0, 1, 0)
+
+def tanh(x):
+    return np.tanh(x)
+
+def tanh_derivative(x):
+    return 1 - np.tanh(x)**2
+
+def train_mlp(X, y, activation='sigmoid', epochs=1000, lr=0.1):
+    # Set activation functions
+    if activation == 'sigmoid':
+        act_func = sigmoid
+        act_deriv = sigmoid_derivative
+    elif activation == 'relu':
+        act_func = relu
+        act_deriv = relu_derivative
+    elif activation == 'tanh':
+        act_func = tanh
+        act_deriv = tanh_derivative
+    
+    # Initialize weights
+    input_size = X.shape[1]
+    hidden1_size = 4
+    hidden2_size = 3
+    output_size = 1
+    
+    W1 = np.random.randn(input_size, hidden1_size)
+    b1 = np.random.randn(hidden1_size)
+    W2 = np.random.randn(hidden1_size, hidden2_size)
+    b2 = np.random.randn(hidden2_size)
+    W3 = np.random.randn(hidden2_size, output_size)
+    b3 = np.random.randn(output_size)
+    
+    for epoch in range(epochs):
+        # Forward pass
+        Z1 = np.dot(X, W1) + b1
+        A1 = act_func(Z1)
+        Z2 = np.dot(A1, W2) + b2
+        A2 = act_func(Z2)
+        Z3 = np.dot(A2, W3) + b3
+        A3 = act_func(Z3)
+        
+        # Backward pass
+        error = y - A3
+        dZ3 = error * act_deriv(A3)
+        dW3 = np.dot(A2.T, dZ3)
+        db3 = np.sum(dZ3, axis=0)
+        
+        dA2 = np.dot(dZ3, W3.T)
+        dZ2 = dA2 * act_deriv(A2)
+        dW2 = np.dot(A1.T, dZ2)
+        db2 = np.sum(dZ2, axis=0)
+        
+        dA1 = np.dot(dZ2, W2.T)
+        dZ1 = dA1 * act_deriv(A1)
+        dW1 = np.dot(X.T, dZ1)
+        db1 = np.sum(dZ1, axis=0)
+        
+        # Update weights
+        W3 += lr * dW3
+        b3 += lr * db3
+        W2 += lr * dW2
+        b2 += lr * db2
+        W1 += lr * dW1
+        b1 += lr * db1
+        
+        if epoch % 100 == 0:
+            loss = np.mean(np.square(error))
+            print(f"Epoch {epoch}, Loss: {loss}")
+    
+    return W1, b1, W2, b2, W3, b3
+
+# Usage
+N = int(input("Enter number of inputs: "))
+X = np.random.rand(10, N)  # 10 samples
+y = np.random.randint(0, 2, (10, 1))
+
+# For Exp 19 (Sigmoid)
+W1, b1, W2, b2, W3, b3 = train_mlp(X, y, activation='sigmoid')
+
+
+# For Exp 20 (ReLU)
+# W1, b1, W2, b2, W3, b3 = train_mlp(X, y, activation='relu')
+
+# For Exp 21 (Tanh)
+# W1, b1, W2, b2, W3, b3 = train_mlp(X, y, activation='tanh')
