@@ -1,0 +1,225 @@
+#exp 22
+!pip install pyspellchecker
+
+import re
+import nltk
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+from spellchecker import SpellChecker
+
+# Download required NLTK data
+nltk.download('punkt')
+nltk.download('stopwords')
+
+def preprocess_text(text):
+    # Step 1: Text cleaning
+    # Remove special characters, punctuation, and numbers
+    cleaned_text = re.sub(r'[^a-zA-Z\s]', '', text)
+    print(cleaned_text)
+    
+    # Remove extra whitespaces
+    cleaned_text = re.sub(r'\s+', ' ', cleaned_text).strip()
+    print(cleaned_text)
+    
+    # Step 2: Convert to lowercase
+    cleaned_text = cleaned_text.lower()
+    print(cleaned_text)
+    
+    # Step 3: Tokenization
+    tokens = word_tokenize(cleaned_text)
+    print(cleaned_text)
+    
+    # Step 4: Remove stop words
+    stop_words = set(stopwords.words('english'))
+    tokens = [token for token in tokens if token not in stop_words]
+    print(cleaned_text)
+    
+    # Step 5: Correct misspelled words
+    spell = SpellChecker()
+    corrected_tokens = []
+    
+    for token in tokens:
+        corrected = spell.correction(token)
+        if corrected:
+            corrected_tokens.append(corrected)
+        else:
+            corrected_tokens.append(token)
+    
+    return corrected_tokens
+
+# Usage
+with open('C:/Users/Soumili/Desktop/input_text.txt', 'r') as file:
+    text = file.read()
+    
+processed_tokens = preprocess_text(text)
+print("Processed tokens:", processed_tokens[:50])  # Show first 50 tokens
+
+
+#exp 23 stemming lemmatization
+import re
+import nltk
+from nltk.stem import PorterStemmer, WordNetLemmatizer
+
+#nltk.download()
+nltk.download('wordnet')
+nltk.download('omw-1.4')  # Add this line
+
+def preprocess_text_stemlem(text):
+    # Step 1: Text cleaning
+    cleaned_text = re.sub(r'[^a-zA-Z\s]', '', text)
+    cleaned_text = re.sub(r'\s+', ' ', cleaned_text).strip()
+    
+    # Step 2: Convert to lowercase
+    cleaned_text = cleaned_text.lower()
+    
+    # Step 3: Stemming and Lemmatization
+    stemmer = PorterStemmer()
+    lemmatizer = WordNetLemmatizer()
+    
+    words = cleaned_text.split()
+    stemmed_words = [stemmer.stem(word) for word in words]
+    lemmatized_words = [lemmatizer.lemmatize(word) for word in words]
+    
+    # Step 4: Create 3-word consecutive list
+    three_word_list = []
+    for i in range(len(lemmatized_words) - 2):
+        three_word_list.append(' '.join(lemmatized_words[i:i+3]))
+    
+    return stemmed_words, lemmatized_words, three_word_list
+
+# Usage
+with open('', 'r') as file:
+    text = file.read()
+
+stemmed, lemmatized, three_word = preprocess_text_stemlem(text)
+print("Stemmed words:", stemmed[:20])
+print("Lemmatized words:", lemmatized[:20])
+print("Three-word sequences:", three_word[:10])
+
+
+#exp 24 one-hot encoding
+def one_hot_encoding(file_paths):
+    # Read all files and create vocabulary
+    all_texts = []
+    for file_path in file_paths:
+        with open(file_path, 'r') as file:
+            text = file.read()
+            # Clean and tokenize
+            text = re.sub(r'[^a-zA-Z\s]', '', text)
+            text = text.lower()
+            words = text.split()
+            all_texts.append(words)
+    
+    # Create vocabulary
+    vocabulary = sorted(set(word for text in all_texts for word in text))
+    word_to_index = {word: i for i, word in enumerate(vocabulary)}
+    
+    # Create one-hot encoded vectors
+    one_hot_vectors = []
+    for text in all_texts:
+        vector = [0] * len(vocabulary)
+        for word in text:
+            if word in word_to_index:
+                vector[word_to_index[word]] = 1
+        one_hot_vectors.append(vector)
+    
+    return one_hot_vectors, vocabulary
+
+# Usage
+file_paths = ['file1.txt', 'file2.txt', 'file3.txt']
+vectors, vocab = one_hot_encoding(file_paths)
+print("Vocabulary size:", len(vocab))
+print("First 20 words:", vocab[:20])
+print("One-hot vector sample:", vectors[0][:20])  # Show first 20 elements
+
+#exp 25 bag of words
+from collections import Counter
+
+def bag_of_words(file_paths):
+    all_texts = []
+    
+    # Read and preprocess all files
+    for file_path in file_paths:
+        with open(file_path, 'r') as file:
+            text = file.read()
+            text = re.sub(r'[^a-zA-Z\s]', '', text)
+            text = text.lower()
+            words = text.split()
+            all_texts.append(words)
+    
+    # Create vocabulary
+    vocabulary = sorted(set(word for text in all_texts for word in text))
+    word_to_index = {word: i for i, word in enumerate(vocabulary)}
+    
+    # Create bag of words vectors
+    bow_vectors = []
+    for text in all_texts:
+        word_counts = Counter(text)
+        vector = [0] * len(vocabulary)
+        for word, count in word_counts.items():
+            if word in word_to_index:
+                vector[word_to_index[word]] = count
+        bow_vectors.append(vector)
+    
+    return bow_vectors, vocabulary
+
+# Usage
+file_paths = ['review1.txt', 'review2.txt', 'review3.txt']
+vectors, vocab = bag_of_words(file_paths)
+print("Vocabulary size:", len(vocab))
+print("First 20 words:", vocab[:20])
+print("BoW vector sample:", vectors[0][:20])
+
+#exp 26 TF-IDF
+import math
+from collections import Counter
+
+def compute_tf_idf(file_paths):
+    all_texts = []
+    
+    # Read and preprocess all files
+    for file_path in file_paths:
+        with open(file_path, 'r') as file:
+            text = file.read()
+            text = re.sub(r'[^a-zA-Z\s]', '', text)
+            text = text.lower()
+            words = text.split()
+            all_texts.append(words)
+    
+    # Create vocabulary
+    vocabulary = sorted(set(word for text in all_texts for word in text))
+    word_to_index = {word: i for i, word in enumerate(vocabulary)}
+    
+    # Compute TF
+    tf_vectors = []
+    for text in all_texts:
+        word_counts = Counter(text)
+        total_words = len(text)
+        tf_vector = [0] * len(vocabulary)
+        for word, count in word_counts.items():
+            if word in word_to_index:
+                tf_vector[word_to_index[word]] = count / total_words
+        tf_vectors.append(tf_vector)
+    
+    # Compute IDF
+    num_docs = len(all_texts)
+    idf_vector = [0] * len(vocabulary)
+    
+    for i, word in enumerate(vocabulary):
+        doc_count = sum(1 for text in all_texts if word in text)
+        idf_vector[i] = math.log(num_docs / (1 + doc_count))
+    
+    # Compute TF-IDF
+    tf_idf_vectors = []
+    for tf_vector in tf_vectors:
+        tf_idf_vector = [tf * idf for tf, idf in zip(tf_vector, idf_vector)]
+        tf_idf_vectors.append(tf_idf_vector)
+    
+    return tf_idf_vectors, vocabulary
+
+# Usage
+file_paths = ['place1.txt', 'place2.txt', 'place3.txt']
+vectors, vocab = compute_tf_idf(file_paths)
+print("Vocabulary size:", len(vocab))
+print("First 20 words:", vocab[:20])
+print("TF-IDF vector sample:", vectors[0][:20])
