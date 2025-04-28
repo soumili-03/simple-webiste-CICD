@@ -1,0 +1,455 @@
+//exp1
+import csv
+
+def read_graph_csv(filename):
+    graph = {}
+    with open(filename, 'r') as file:
+        reader = csv.reader(file)
+        for row in reader:
+            node = int(row[0])
+            neighbors = [int(x) for x in row[1:] if x.strip()]
+            graph[node] = neighbors
+    return graph
+
+def dfs_recursive(graph, node, visited=None):
+    if visited is None:
+        visited = set()
+    
+    visited.add(node)
+    print(node, end=' ')
+    
+    for neighbor in graph.get(node, []):
+        if neighbor not in visited:
+            dfs_recursive(graph, neighbor, visited)
+
+# Usage
+graph = read_graph_csv('C:/Users/Soumili/Desktop/graph.csv')
+print("DFS Traversal:")
+dfs_recursive(graph, 0)
+
+//exp2 non recursive dfs
+def create_graph():
+    graph = {}
+    n = int(input("Enter number of nodes: "))
+    m = int(input("Enter number of edges: "))
+    print("Enter edges (u v):")
+    for _ in range(m):
+        u, v = map(int, input().split())
+        graph.setdefault(u, []).append(v)
+        graph.setdefault(v, []).append(u)  # undirected
+    return graph
+
+def dfs_iterative(graph, start):
+    visited = set()
+    stack = [start]
+    
+    while stack:
+        node = stack.pop()
+        if node not in visited:
+            visited.add(node)
+            print(node, end=' ')
+            
+            for neighbor in graph.get(node, []):
+                if neighbor not in visited:
+                    stack.append(neighbor)
+
+# Usage
+graph = create_graph()
+start = int(input("Enter start node: "))
+print("DFS Traversal:")
+dfs_iterative(graph, start)
+
+//exp 3 bfs iterative
+from collections import deque
+
+def bfs(graph, start):
+    visited = set()
+    queue = deque([start])
+    visited.add(start)
+    
+    while queue:
+        node = queue.popleft()
+        print(node, end=' ')
+        
+        for neighbor in graph.get(node, []):
+            if neighbor not in visited:
+                visited.add(neighbor)
+                queue.append(neighbor)
+
+# Usage
+graph = create_graph()  # Use function from Exp 2
+start = int(input("Enter start node: "))
+print("BFS Traversal:")
+bfs(graph, start)
+
+
+//exp 4 best first directed unweighted  user
+import heapq
+
+def best_first_search(graph, start, goal, heuristic):
+    visited = set()
+    pq = [(heuristic[start], start)]
+    
+    while pq:
+        _, node = heapq.heappop(pq)
+        
+        if node in visited:
+            continue
+            
+        visited.add(node)
+        print(node, end=' ')
+        
+        if node == goal:
+            print("\nGoal reached!")
+            return
+        
+        for neighbor in graph.get(node, []):
+            if neighbor not in visited:
+                heapq.heappush(pq, (heuristic[neighbor], neighbor))
+    
+    print("\nGoal not found!")
+
+# Usage
+n = int(input("Enter number of nodes: "))
+graph = {}
+heuristic = {}
+
+for i in range(n):
+    neighbors = list(map(int, input(f"Enter neighbors of node {i} (space-separated): ").split()))
+    graph[i] = neighbors
+    heuristic[i] = int(input(f"Enter heuristic value for node {i}: "))
+
+start = int(input("Enter start node: "))
+goal = int(input("Enter goal node: "))
+best_first_search(graph, start, goal, heuristic)
+
+
+//exp 5 best first undirected weighted user
+import heapq
+
+def best_first_search(graph, start, goal, heuristic):
+    visited = set()
+    pq = [(heuristic[start], start)]
+    
+    while pq:
+        _, node = heapq.heappop(pq)
+        
+        if node in visited:
+            continue
+            
+        visited.add(node)
+        print(node, end=' ')
+        
+        if node == goal:
+            print("\nGoal reached!")
+            return
+        
+        for neighbor, weight in graph.get(node, []):  # Note: we have (neighbor, weight) pairs
+            if neighbor not in visited:
+                heapq.heappush(pq, (heuristic[neighbor], neighbor))
+    
+    print("\nGoal not found!")
+
+# Usage for undirected weighted graph
+n = int(input("Enter number of nodes: "))
+graph = {}
+heuristic = {}
+
+for i in range(n):
+    neighbors_with_weights = []
+    num_neighbors = int(input(f"Enter number of neighbors for node {i}: "))
+    
+    for j in range(num_neighbors):
+        neighbor, weight = map(int, input(f"Enter neighbor and weight (space-separated): ").split())
+        neighbors_with_weights.append((neighbor, weight))
+        
+        # Since it's undirected, add the reverse edge
+        if neighbor not in graph:
+            graph[neighbor] = []
+        graph[neighbor].append((i, weight))
+    
+    graph[i] = neighbors_with_weights
+    heuristic[i] = int(input(f"Enter heuristic value for node {i}: "))
+
+start = int(input("Enter start node: "))
+goal = int(input("Enter goal node: "))
+best_first_search(graph, start, goal, heuristic)
+
+
+//exp 6 best first undirected unweighted user
+import heapq
+
+def best_first_search(graph, start, goal, heuristic):
+    visited = set()
+    pq = [(heuristic[start], start)]
+    
+    while pq:
+        _, node = heapq.heappop(pq)
+        
+        if node in visited:
+            continue
+            
+        visited.add(node)
+        print(node, end=' ')
+        
+        if node == goal:
+            print("\nGoal reached!")
+            return
+        
+        for neighbor in graph.get(node, []):
+            if neighbor not in visited:
+                heapq.heappush(pq, (heuristic[neighbor], neighbor))
+    
+    print("\nGoal not found!")
+
+# Usage for undirected unweighted graph
+n = int(input("Enter number of nodes: "))
+graph = {}
+heuristic = {}
+
+for i in range(n):
+    neighbors = list(map(int, input(f"Enter neighbors of node {i} (space-separated): ").split()))
+    graph[i] = neighbors
+    
+    # Since it's undirected, add reverse edges
+    for neighbor in neighbors:
+        if neighbor not in graph:
+            graph[neighbor] = []
+        if i not in graph[neighbor]:
+            graph[neighbor].append(i)
+    
+    heuristic[i] = int(input(f"Enter heuristic value for node {i}: "))
+
+start = int(input("Enter start node: "))
+goal = int(input("Enter goal node: "))
+best_first_search(graph, start, goal, heuristic)
+
+
+//exp8 a star csv
+import heapq
+
+def a_star_csv(filename):
+    graph = {}
+    heuristic = {}
+    
+    with open(filename, 'r') as file:
+        reader = csv.reader(file)
+        # Format: node, neighbors:weights, heuristic
+        for row in reader:
+            node = int(row[0])
+            neighbors_weights = []
+            i = 1
+            while i < len(row)-1:
+                if row[i] and row[i+1]:
+                    neighbors_weights.append((int(row[i]), int(row[i+1])))
+                i += 2
+            graph[node] = neighbors_weights
+            heuristic[node] = int(row[-1])
+    return graph, heuristic
+
+def a_star(graph, start, goal, heuristic):
+    visited = set()
+    pq = [(heuristic[start], 0, start, [start])]
+    
+    while pq:
+        f, g, node, path = heapq.heappop(pq)
+        
+        if node in visited:
+            continue
+            
+        visited.add(node)
+        
+        if node == goal:
+            print(f"Path: {' -> '.join(map(str, path))}")
+            print(f"Cost: {g}")
+            return
+        
+        for neighbor, weight in graph.get(node, []):
+            if neighbor not in visited:
+                new_g = g + weight
+                new_f = new_g + heuristic[neighbor]
+                heapq.heappush(pq, (new_f, new_g, neighbor, path + [neighbor]))
+    
+    print("Goal not found!")
+
+# Usage for Exp 8
+graph, heuristic = a_star_csv('graph_astar.csv')
+start = int(input("Enter start node: "))
+goal = int(input("Enter goal node: "))
+a_star(graph, start, goal, heuristic)
+
+
+
+//exp 9 a star directed weighted graph user
+import heapq
+
+def a_star(graph, start, goal, heuristic):
+    visited = set()
+    pq = [(heuristic[start], 0, start, [start])]
+    
+    while pq:
+        f, g, node, path = heapq.heappop(pq)
+        
+        if node in visited:
+            continue
+            
+        visited.add(node)
+        
+        if node == goal:
+            print(f"Path: {' -> '.join(map(str, path))}")
+            print(f"Cost: {g}")
+            return
+        
+        for neighbor, weight in graph.get(node, []):
+            if neighbor not in visited:
+                new_g = g + weight
+                new_f = new_g + heuristic[neighbor]
+                heapq.heappush(pq, (new_f, new_g, neighbor, path + [neighbor]))
+    
+    print("Goal not found!")
+
+# Usage for Exp 9 - Directed weighted graph from user
+n = int(input("Enter number of nodes: "))
+graph = {}
+heuristic = {}
+
+for i in range(n):
+    neighbors_weights = []
+    num_neighbors = int(input(f"Enter number of neighbors for node {i}: "))
+    
+    for j in range(num_neighbors):
+        neighbor, weight = map(int, input(f"Enter neighbor and weight (space-separated): ").split())
+        neighbors_weights.append((neighbor, weight))
+    
+    graph[i] = neighbors_weights
+    heuristic[i] = int(input(f"Enter heuristic value for node {i}: "))
+
+start = int(input("Enter start node: "))
+goal = int(input("Enter goal node: "))
+a_star(graph, start, goal, heuristic)
+
+
+# exp 10 undirected weighted graph csv
+import heapq
+import csv
+
+def a_star_csv_undirected(filename):
+    graph = {}
+    heuristic = {}
+    
+    with open(filename, 'r') as file:
+        reader = csv.reader(file)
+        # Format: node, neighbors:weights, heuristic
+        for row in reader:
+            node = int(row[0])
+            neighbors_weights = []
+            i = 1
+            while i < len(row)-1:
+                if row[i] and row[i+1]:
+                    neighbor = int(row[i])
+                    weight = int(row[i+1])
+                    neighbors_weights.append((neighbor, weight))
+                    
+                    # For undirected graph, add reverse edge
+                    if neighbor not in graph:
+                        graph[neighbor] = []
+                    # Check if reverse edge already exists
+                    if not any(edge[0] == node for edge in graph[neighbor]):
+                        graph[neighbor].append((node, weight))
+                i += 2
+            
+            graph[node] = neighbors_weights
+            heuristic[node] = int(row[-1])
+    
+    return graph, heuristic
+
+def a_star(graph, start, goal, heuristic):
+    # Same A* function as above
+    visited = set()
+    pq = [(heuristic[start], 0, start, [start])]
+    
+    while pq:
+        f, g, node, path = heapq.heappop(pq)
+        
+        if node in visited:
+            continue
+            
+        visited.add(node)
+        
+        if node == goal:
+            print(f"Path: {' -> '.join(map(str, path))}")
+            print(f"Cost: {g}")
+            return
+        
+        for neighbor, weight in graph.get(node, []):
+            if neighbor not in visited:
+                new_g = g + weight
+                new_f = new_g + heuristic[neighbor]
+                heapq.heappush(pq, (new_f, new_g, neighbor, path + [neighbor]))
+    
+    print("Goal not found!")
+
+# Usage for Exp 10
+graph, heuristic = a_star_csv_undirected('graph_astar_undirected.csv')
+start = int(input("Enter start node: "))
+goal = int(input("Enter goal node: "))
+a_star(graph, start, goal, heuristic)
+
+
+#exp 11 undirected weighted graph user
+import heapq
+
+def a_star(graph, start, goal, heuristic):
+    # Same A* function as above
+    visited = set()
+    pq = [(heuristic[start], 0, start, [start])]
+    
+    while pq:
+        f, g, node, path = heapq.heappop(pq)
+        
+        if node in visited:
+            continue
+            
+        visited.add(node)
+        
+        if node == goal:
+            print(f"Path: {' -> '.join(map(str, path))}")
+            print(f"Cost: {g}")
+            return
+        
+        for neighbor, weight in graph.get(node, []):
+            if neighbor not in visited:
+                new_g = g + weight
+                new_f = new_g + heuristic[neighbor]
+                heapq.heappush(pq, (new_f, new_g, neighbor, path + [neighbor]))
+    
+    print("Goal not found!")
+
+# Usage for Exp 11 - Undirected weighted graph from user
+n = int(input("Enter number of nodes: "))
+graph = {}
+heuristic = {}
+
+for i in range(n):
+    neighbors_weights = []
+    num_neighbors = int(input(f"Enter number of neighbors for node {i}: "))
+    
+    for j in range(num_neighbors):
+        neighbor, weight = map(int, input(f"Enter neighbor and weight (space-separated): ").split())
+        neighbors_weights.append((neighbor, weight))
+        
+        # For undirected graph, add reverse edge
+        if neighbor not in graph:
+            graph[neighbor] = []
+        # Check if reverse edge already exists
+        if not any(edge[0] == i for edge in graph[neighbor]):
+            graph[neighbor].append((i, weight))
+    
+    graph[i] = neighbors_weights
+    heuristic[i] = int(input(f"Enter heuristic value for node {i}: "))
+
+start = int(input("Enter start node: "))
+goal = int(input("Enter goal node: "))
+a_star(graph, start, goal, heuristic)
+
+
